@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Тұсаукесер тойына шақыру — Әлихан</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti for celebratory effect -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts: Cormorant Garamond for elegant Kazakh titles & Montserrat for UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Montserrat:wght@400;500;600;700&family=Pinyon+Script&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            50: '#fbf8ee',
+                            100: '#f5efd6',
+                            300: '#e5d194',
+                            500: '#c59d3f',
+                            600: '#b0862d',
+                            700: '#8c6720',
+                        },
+                        kzred: '#962323',
+                        kazakhBlue: '#00AFCA'
+                    },
+                    fontFamily: {
+                        serif: ['"Cormorant Garamond"', 'serif'],
+                        script: ['"Pinyon Script"', 'cursive'],
+                        sans: ['"Montserrat"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Smooth scrolling & mobile frame feel */
+        body {
+            background-color: #1a1714;
+            font-family: 'Montserrat', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c59d3f;
+            border-radius: 4px;
+        }
+
+        /* Ala zhip (traditional black & white twisted cord) */
+        .ala-zhip {
+            background: repeating-linear-gradient(
+                -45deg,
+                #111111,
+                #111111 12px,
+                #ffffff 12px,
+                #ffffff 24px,
+                #c59d3f 24px,
+                #c59d3f 28px
+            );
+            box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+        }
+
+        /* Scissors pulse animation */
+        @keyframes floatPulse {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-6px) scale(1.05); }
+        }
+        .animate-bounce-gentle {
+            animation: floatPulse 2s ease-in-out infinite;
+        }
+
+        /* Rope cut animation */
+        .cut-left {
+            transform: translateX(-120%) rotate(-18deg);
+            opacity: 0;
+            transition: all 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .cut-right {
+            transform: translateX(120%) rotate(18deg);
+            opacity: 0;
+            transition: all 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Kazakh Quraq (patchwork) pattern styled container */
+        .quraq-bg {
+            background-color: #f7f2e7;
+            background-image: radial-gradient(#d6c29c 0.75px, transparent 0.75px), radial-gradient(#d6c29c 0.75px, #f7f2e7 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center py-0 sm:py-6 sm:px-4">
+
+    <!-- Mobile Screen Simulator Container -->
+    <div class="relative w-full max-w-[430px] h-[100dvh] sm:h-[880px] bg-stone-100 overflow-hidden sm:rounded-[42px] shadow-2xl border-0 sm:border-[8px] border-stone-800 flex flex-col justify-between">
+
+        <!-- Top Status Bar & Music / Sound Controls -->
+        <header class="absolute top-0 left-0 right-0 z-30 px-5 pt-3 pb-2 flex items-center justify-between pointer-events-auto bg-gradient-to-b from-stone-900/60 to-transparent">
+            <!-- Back / Brand tag -->
+            <div class="flex items-center space-x-1.5 text-white/90">
+                <span class="text-xs tracking-wider uppercase font-semibold bg-gold-600/80 px-2.5 py-0.5 rounded-full backdrop-blur-sm shadow-sm">
+                    Тұсаукесер Той
+                </span>
+            </div>
+            <!-- Music Audio Toggle Button -->
+            <button id="musicToggle" class="w-9 h-9 rounded-full bg-white/80 backdrop-blur-md shadow-md flex items-center justify-center text-stone-700 hover:text-gold-600 active:scale-95 transition-transform">
+                <svg id="musicIconOn" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                </svg>
+                <svg id="musicIconOff" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                </svg>
+            </button>
+        </header>
+
+        <!-- Main Scrollable Area -->
+        <main id="mainContainer" class="relative w-full h-full overflow-y-auto overflow-x-hidden quraq-bg">
+
+            <!-- SECTION 1: COVER WITH INTERACTIVE ALA ZHIP CUTTING -->
+            <div id="coverHero" class="relative min-h-[100dvh] sm:min-h-[860px] flex flex-col items-center justify-between p-6 pt-16 pb-12 transition-opacity duration-700">
+                
+                <!-- Kazakh Traditional Ornament Header -->
+                <div class="text-center z-10 space-y-2">
+                    <!-- Symmetrical SVG Ornament -->
+                    <div class="w-20 h-8 mx-auto text-gold-600 opacity-90">
+                        <svg viewBox="0 0 100 40" fill="currentColor" class="w-full h-full">
+                            <path d="M50 0 C40 15, 30 18, 10 20 C25 22, 28 32, 28 40 C35 30, 42 28, 50 20 C58 28, 65 30, 72 40 C72 32, 75 22, 90 20 C70 18, 60 15, 50 0 Z"/>
+                        </svg>
+                    </div>
+                    <p class="text-xs uppercase tracking-[0.25em] text-stone-500 font-semibold">Баланың тұсауын кесу тойы</p>
+                    <h2 class="font-serif text-3xl font-bold text-stone-800 tracking-wide">
+                        Құрметті қонақ!
+                    </h2>
+                    <p class="text-sm text-stone-600 max-w-[280px] mx-auto leading-relaxed">
+                        Тұсаукесер рәсіміне қатысып, ақ жол тілеуге шақырамыз
+                    </p>
+                </div>
+
+                <!-- Center: Interactive Carpet & Ala Zhip Lock -->
+                <div class="relative w-full max-w-[310px] aspect-[4/5] bg-gradient-to-b from-[#FAF6EE] to-[#F1E7D0] rounded-2xl p-4 shadow-xl border-2 border-gold-300 flex flex-col justify-between items-center overflow-hidden my-4">
+                    
+                    <!-- Inner Ornamental Border -->
+                    <div class="absolute inset-2 border border-dashed border-gold-500/50 rounded-xl pointer-events-none"></div>
+
+                    <!-- Mini Preview Details -->
+                    <div class="text-center mt-3 z-0">
+                        <span class="text-[11px] font-bold text-gold-700 uppercase tracking-widest bg-gold-100 px-3 py-1 rounded-full">
+                            1 ЖАС • ТОЙ
+                        </span>
+                        <h1 class="font-script text-6xl text-kzred mt-3 tracking-normal">Әлихан</h1>
+                        <p class="font-serif text-xs text-stone-500 tracking-widest uppercase mt-1">Тұсауы кесілмек</p>
+                    </div>
+
+                    <!-- Traditional Patchwork (Құрақ көрпе) illustration box -->
+                    <div class="w-48 h-32 rounded-lg grid grid-cols-3 grid-rows-2 gap-1.5 p-1.5 bg-amber-900/10 shadow-inner">
+                        <div class="bg-kzred/80 rounded flex items-center justify-center text-white text-xs">❖</div>
+                        <div class="bg-gold-500 rounded flex items-center justify-center text-white text-xs">✿</div>
+                        <div class="bg-emerald-700 rounded flex items-center justify-center text-white text-xs">❖</div>
+                        <div class="bg-amber-600 rounded flex items-center justify-center text-white text-xs">✿</div>
+                        <div class="bg-kazakhBlue rounded flex items-center justify-center text-white text-xs">❖</div>
+                        <div class="bg-stone-700 rounded flex items-center justify-center text-white text-xs">✿</div>
+                    </div>
+
+                    <p class="text-[11px] text-stone-500 text-center italic z-0 mb-2">
+                        «Қадамың нық, жолың ашық болсын!»
+                    </p>
+
+                    <!-- THE ALA ZHIP ROPE OVERLAY (To be cut) -->
+                    <div id="ropeOverlay" class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                        <!-- Left Rope Segment -->
+                        <div id="ropeLeft" class="ala-zhip w-1/2 h-4 origin-left"></div>
+                        <!-- Right Rope Segment -->
+                        <div id="ropeRight" class="ala-zhip w-1/2 h-4 origin-right"></div>
+                    </div>
+
+                    <!-- INTERACTIVE SCISSORS BUTTON (Батырма) -->
+                    <div id="scissorButtonWrapper" class="absolute inset-0 z-30 flex flex-col items-center justify-center pointer-events-auto">
+                        <button id="cutRopeBtn" class="group relative flex items-center space-x-2 bg-gradient-to-r from-kzred to-red-800 text-white px-5 py-3 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 animate-bounce-gentle border border-amber-300">
+                            <!-- Scissor Icon -->
+                            <span class="text-xl transform group-hover:rotate-45 transition-transform duration-200">✂️</span>
+                            <span class="font-bold text-sm tracking-wide">Ала жіпті қию</span>
+                        </button>
+                        <span class="text-[11px] font-semibold text-stone-700 bg-white/90 px-3 py-1 rounded-full shadow mt-2 backdrop-blur-sm animate-pulse">
+                            👆 Шақыруды ашу үшін басыңыз
+                        </span>
+                    </div>
+
+                </div>
+
+                <!-- Bottom Hint -->
+                <div class="text-center text-xs text-stone-500 font-medium z-10">
+                    Қазақтың көне салты бойынша шақыртуды ашыңыз
+                </div>
+            </div>
+
+
+            <!-- SECTION 2: FULL INVITATION CONTENT (Revealed after cutting) -->
+            <div id="invitationContent" class="hidden opacity-0 translate-y-8 transition-all duration-700 ease-out px-4 pb-12 pt-16 space-y-6">
+
+                <!-- Celebration Header Banner -->
+                <div class="text-center space-y-1">
+                    <span class="inline-block bg-gold-500/15 text-gold-700 font-bold text-[11px] tracking-widest px-3 py-1 rounded-full border border-gold-300">
+                        БІСМІЛЛӘҺИР-РАХМАНИР-РАХИМ
+                    </span>
+                    <h3 class="font-serif text-3xl font-extrabold text-stone-900 mt-2">
+                        ТҰСАУКЕСЕР ТОЙЫ
+                    </h3>
+                    <p class="font-script text-7xl text-kzred my-1">Әлихан</p>
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-stone-600">
+                        1 Жасқа толуына орай
+                    </p>
+                </div>
+
+                <!-- Main Invitation Letter Card -->
+                <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-md border border-stone-200/80 text-center space-y-4 relative overflow-hidden">
+                    <!-- Corner Ornaments -->
+                    <div class="absolute -top-3 -left-3 w-10 h-10 text-gold-400 opacity-40">❖</div>
+                    <div class="absolute -top-3 -right-3 w-10 h-10 text-gold-400 opacity-40">❖</div>
+
+                    <p class="font-serif text-lg text-stone-800 leading-relaxed font-semibold">
+                        Құрметті ағайын-туыс, бауырлар, құда-жекжат және дос-жарандар!
+                    </p>
+                    <p class="text-sm text-stone-600 leading-relaxed">
+                        Сіздерді отбасымыздың тұңғыш перзенті — <strong class="text-stone-900 font-bold">Әлиханның</strong> қадамы құтты, болашағы нұрлы болсын деген ниетпен өткізілетін <strong>тұсаукесер салтанатты дастарханына</strong> ақ тілекпен шақырамыз!
+                    </p>
+
+                    <div class="h-px bg-gradient-to-r from-transparent via-gold-300 to-transparent my-3"></div>
+
+                    <!-- Event Time & Venue -->
+                    <div class="grid grid-cols-2 gap-3 text-left">
+                        <div class="bg-gold-50/70 p-3 rounded-xl border border-gold-100">
+                            <span class="text-[11px] uppercase tracking-wider text-gold-700 font-bold block">📅 Уақыты</span>
+                            <span class="text-sm font-bold text-stone-800 mt-0.5 block">15 Мамыр 2027</span>
+                            <span class="text-xs text-stone-600 font-medium">Сағат 18:00</span>
+                        </div>
+                        <div class="bg-gold-50/70 p-3 rounded-xl border border-gold-100">
+                            <span class="text-[11px] uppercase tracking-wider text-gold-700 font-bold block">📍 Мекен-жайы</span>
+                            <span class="text-sm font-bold text-stone-800 mt-0.5 block">Астана қаласы</span>
+                            <span class="text-xs text-stone-600 font-medium">«Салтанат Сарайы»</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COUNTDOWN TIMER -->
+                <div class="bg-stone-900 text-white rounded-2xl p-5 shadow-lg text-center space-y-3">
+                    <span class="text-xs font-semibold tracking-widest text-gold-300 uppercase">
+                        Тойдың басталуына қалды:
+                    </span>
+                    <div class="grid grid-cols-4 gap-2 pt-1" id="timerGrid">
+                        <div class="bg-stone-800/80 rounded-xl p-2 border border-stone-700">
+                            <span id="days" class="font-bold text-2xl text-gold-400">00</span>
+                            <span class="text-[10px] block text-stone-400 uppercase">Күн</span>
+                        </div>
+                        <div class="bg-stone-800/80 rounded-xl p-2 border border-stone-700">
+                            <span id="hours" class="font-bold text-2xl text-gold-400">00</span>
+                            <span class="text-[10px] block text-stone-400 uppercase">Сағат</span>
+                        </div>
+                        <div class="bg-stone-800/80 rounded-xl p-2 border border-stone-700">
+                            <span id="minutes" class="font-bold text-2xl text-gold-400">00</span>
+                            <span class="text-[10px] block text-stone-400 uppercase">Минут</span>
+                        </div>
+                        <div class="bg-stone-800/80 rounded-xl p-2 border border-stone-700">
+                            <span id="seconds" class="font-bold text-2xl text-gold-400">00</span>
+                            <span class="text-[10px] block text-stone-400 uppercase">Секунд</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2GIS / MAP NAVIGATION -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-stone-200 text-center space-y-3">
+                    <div class="flex items-center justify-center space-x-2 text-stone-800">
+                        <svg class="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="font-bold text-sm">«Салтанат Сарайы» мейрамханасы</span>
+                    </div>
+                    <p class="text-xs text-stone-500">Мәңгілік Ел даңғылы, 15/1, Астана қ.</p>
+                    <a href="https://2gis.kz" target="_blank" class="inline-flex items-center justify-center space-x-2 w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl text-xs font-bold transition shadow-sm">
+                        <span>2GIS арқылы бағыт ашу</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                    </a>
+                </div>
+
+                <!-- RSVP (ҚАТЫСУДЫ РАСТАУ ФОРМАСЫ) -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-stone-200 space-y-4">
+                    <div class="text-center">
+                        <h4 class="font-bold text-sm text-stone-800">Қатысуыңызды растаңыз</h4>
+                        <p class="text-xs text-stone-500 mt-0.5">Бізге алдын ала дайындық үшін өте маңызды</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <input id="guestName" type="text" placeholder="Аты-жөніңіз" class="w-full text-xs p-3 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-gold-500 bg-stone-50">
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="selectRsvp('Келемін')" id="btnYes" class="rsvp-option py-2.5 rounded-xl border border-stone-300 text-xs font-bold text-stone-700 hover:border-emerald-500 transition flex items-center justify-center space-x-1">
+                                <span>✅ Келемін</span>
+                            </button>
+                            <button type="button" onclick="selectRsvp('Өкінішке орай, келе алмаймын')" id="btnNo" class="rsvp-option py-2.5 rounded-xl border border-stone-300 text-xs font-bold text-stone-700 hover:border-red-400 transition flex items-center justify-center space-x-1">
+                                <span>❌ Келе алмаймын</span>
+                            </button>
+                        </div>
+
+                        <button id="sendRsvpBtn" onclick="sendRsvpFeedback()" class="w-full bg-stone-900 text-gold-300 font-bold py-2.5 rounded-xl text-xs hover:bg-stone-800 transition active:scale-95 shadow">
+                            Жауапты растау
+                        </button>
+                        <div id="rsvpSuccessMsg" class="hidden text-center text-xs text-emerald-700 font-bold bg-emerald-50 p-2 rounded-lg">
+                            Сіздің жауабыңыз қабылданды, рақмет! 💐
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SHARE ON WHATSAPP & COPY TEXT (БӨЛІСУ ЖӘНЕ КӨШІРУ) -->
+                <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-5 text-center space-y-3">
+                    <div class="flex items-center justify-center space-x-2 text-emerald-900">
+                        <span class="text-xl">📲</span>
+                        <h4 class="font-bold text-sm">Шақыртуды WhatsApp-та бөлісу</h4>
+                    </div>
+                    <p class="text-xs text-emerald-800/80 leading-relaxed">
+                        Шақыру мәтіні мен сілтемесін WhatsApp арқылы туыстар мен достарға жеке немесе топқа оңай жіберіңіз:
+                    </p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                        <!-- Send via WhatsApp direct -->
+                        <button onclick="shareViaWhatsApp()" class="flex items-center justify-center space-x-2 bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-white font-bold py-3 px-4 rounded-xl text-xs shadow-md transition">
+                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                            </svg>
+                            <span>WhatsApp-пен жіберу</span>
+                        </button>
+
+                        <!-- Copy to clipboard button -->
+                        <button onclick="copyInvitationText()" id="copyBtn" class="flex items-center justify-center space-x-2 bg-stone-800 hover:bg-stone-900 active:scale-95 text-white font-semibold py-3 px-4 rounded-xl text-xs shadow-md transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                            <span id="copyBtnText">Мәтінді көшіріп алу</span>
+                        </button>
+                    </div>
+
+                    <!-- Hidden text input for copy action fallback -->
+                    <textarea id="hiddenShareText" class="sr-only"></textarea>
+                </div>
+
+                <!-- Toast Notification Alert Box -->
+                <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-stone-900 text-white text-xs font-medium px-4 py-2.5 rounded-full shadow-2xl opacity-0 pointer-events-none transition-opacity duration-300">
+                    Мәтін сәтті көшірілді!
+                </div>
+
+                <!-- Footer with gratitude -->
+                <div class="text-center pt-2 pb-6 space-y-1">
+                    <p class="font-serif italic text-base text-stone-700">«Той иелері: Қайрат & Айгүл»</p>
+                    <p class="text-[11px] text-stone-500">Сіздерді асыға күтеміз!</p>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Interactive Logic -->
+    <script>
+        // 1. Audio Synthesizer (Tone-like Web Audio sound without external files)
+        let audioCtx = null;
+        let isMusicPlaying = false;
+        let melodyInterval = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Play Scissors Snip Sound Effect
+        function playSnipSound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(160, now + 0.12);
+
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.13);
+            } catch (e) {
+                console.log("Audio not supported or blocked");
+            }
+        }
+
+        // Soft Kazakh Pentatonic Dombyra-like melodic sequence
+        const pentatonicNotes = [293.66, 329.63, 392.00, 440.00, 523.25, 587.33]; // D, E, G, A, C, D
+        function playPluckNote(freq) {
+            if (!audioCtx || !isMusicPlaying) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now);
+
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.6);
+        }
+
+        function toggleMusic() {
+            initAudio();
+            const iconOn = document.getElementById('musicIconOn');
+            const iconOff = document.getElementById('musicIconOff');
+
+            isMusicPlaying = !isMusicPlaying;
+
+            if (isMusicPlaying) {
+                iconOn.classList.remove('hidden');
+                iconOff.classList.add('hidden');
+                let step = 0;
+                melodyInterval = setInterval(() => {
+                    const note = pentatonicNotes[step % pentatonicNotes.length];
+                    playPluckNote(note);
+                    step++;
+                }, 400);
+            } else {
+                iconOn.classList.add('hidden');
+                iconOff.classList.remove('hidden');
+                if (melodyInterval) clearInterval(melodyInterval);
+            }
+        }
+
+        document.getElementById('musicToggle').addEventListener('click', toggleMusic);
+
+        // 2. THE CUTTING CEREMONY (Ала жіп қию анимациясы)
+        const cutBtn = document.getElementById('cutRopeBtn');
+        const ropeLeft = document.getElementById('ropeLeft');
+        const ropeRight = document.getElementById('ropeRight');
+        const scissorWrapper = document.getElementById('scissorButtonWrapper');
+        const coverHero = document.getElementById('coverHero');
+        const invitationContent = document.getElementById('invitationContent');
+        const mainContainer = document.getElementById('mainContainer');
+
+        let isCut = false;
+
+        cutBtn.addEventListener('click', () => {
+            if (isCut) return;
+            isCut = true;
+
+            // Play sound
+            playSnipSound();
+
+            // Animate scissors & rope parting
+            ropeLeft.classList.add('cut-left');
+            ropeRight.classList.add('cut-right');
+            scissorWrapper.style.transform = 'scale(0.8)';
+            scissorWrapper.style.opacity = '0';
+            scissorWrapper.style.transition = 'all 0.4s ease';
+
+            // Confetti Blast!
+            confetti({
+                particleCount: 120,
+                spread: 80,
+                origin: { y: 0.55 },
+                colors: ['#c59d3f', '#962323', '#00AFCA', '#ffffff']
+            });
+
+            // Reveal the invitation letter
+            setTimeout(() => {
+                invitationContent.classList.remove('hidden');
+                setTimeout(() => {
+                    invitationContent.classList.remove('opacity-0', 'translate-y-8');
+                    // Smoothly scroll down towards details
+                    invitationContent.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+
+                // Auto-start subtle music ambient if not started
+                if (!isMusicPlaying) {
+                    toggleMusic();
+                }
+            }, 600);
+        });
+
+        // 3. COUNTDOWN TIMER
+        // 15 May (Target celebration)
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + 15); // Dynamic 15 days ahead for realistic preview
+        targetDate.setHours(18, 0, 0);
+
+        function updateTimer() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            if (distance < 0) return;
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('days').innerText = String(days).padStart(2, '0');
+            document.getElementById('hours').innerText = String(hours).padStart(2, '0');
+            document.getElementById('minutes').innerText = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').innerText = String(seconds).padStart(2, '0');
+        }
+        setInterval(updateTimer, 1000);
+        updateTimer();
+
+        // 4. RSVP SELECTION
+        let selectedStatus = 'Келемін';
+        function selectRsvp(status) {
+            selectedStatus = status;
+            const btnYes = document.getElementById('btnYes');
+            const btnNo = document.getElementById('btnNo');
+
+            if (status === 'Келемін') {
+                btnYes.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+                btnNo.classList.remove('bg-red-500', 'text-white', 'border-red-600');
+            } else {
+                btnNo.classList.add('bg-red-500', 'text-white', 'border-red-600');
+                btnYes.classList.remove('bg-emerald-500', 'text-white', 'border-emerald-600');
+            }
+        }
+
+        function sendRsvpFeedback() {
+            const name = document.getElementById('guestName').value.trim() || 'Құрметті қонақ';
+            document.getElementById('sendRsvpBtn').classList.add('hidden');
+            const msg = document.getElementById('rsvpSuccessMsg');
+            msg.innerText = `${name}, рақмет! Жауабыңыз қабылданды (${selectedStatus}).`;
+            msg.classList.remove('hidden');
+        }
+
+        // 5. PREPARED INVITATION TEXT FOR WHATSAPP
+        const invitationShareMessage = `Құрметті ағайын-туыс, бауырлар!\n\nСіздерді кішкентай ұлымыз Әлиханның 1 жасқа толуына орай ұйымдастырылатын "Тұсаукесер тойына" салтанатты қонақ болуға шақырамыз!\n\n📅 Күні: 15 Мамыр, 18:00\n📍 Мекен-жайы: Астана қ., «Салтанат Сарайы»\n\nИнтерактивті онлайн-шақыртуды ашып көріңіз:\n${window.location.href}`;
+
+        // Function to copy text reliably in iframe / mobile
+        function copyInvitationText() {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = invitationShareMessage;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand('copy');
+                showToast("Шақыру мәтіні көшірілді! WhatsApp-қа қоюға болады.");
+                const btnText = document.getElementById('copyBtnText');
+                btnText.innerText = "Көшірілді! ✓";
+                setTimeout(() => {
+                    btnText.innerText = "Мәтінді көшіріп алу";
+                }, 2500);
+            } catch (err) {
+                showToast("Көшіру мүмкін болмады");
+            }
+            document.body.removeChild(tempInput);
+        }
+
+        // Open WhatsApp directly with prefilled text
+        function shareViaWhatsApp() {
+            const encoded = encodeURIComponent(invitationShareMessage);
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encoded}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Toast feedback box
+        function showToast(text) {
+            const toast = document.getElementById('toast');
+            toast.innerText = text;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Initial setup for RSVP state
+        selectRsvp('Келемін');
+    </script>
+</body>
+</html>
